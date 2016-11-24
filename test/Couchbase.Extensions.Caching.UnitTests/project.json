@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0-*",
+
+  "testRunner": "nunit",
+
+  "dependencies": {
+    "NETStandard.Library": "1.6.1",
+    "NUnit": "3.5.0"
+  },
+
+  "frameworks": {
+    "net462": {}
+  },
+  "runtimes": {
+    "win": {}
+  }
+}
