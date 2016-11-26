@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Threading.Tasks;
 using Couchbase.Extensions.Caching.IntegrationTests.Infrastructure;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -9,7 +10,7 @@ namespace Couchbase.Extensions.Caching.IntegrationTests
     public class CouchbaseCacheTests
     {
         [Test]
-        public void Test_Set()
+        public async Task Test_Set()
         {
             var cache = new CouchbaseCache(new CouchbaseCacheOptions
             {
@@ -26,6 +27,8 @@ namespace Couchbase.Extensions.Caching.IntegrationTests
 
             var result = bucket.Get<Poco>(key);
             Assert.AreEqual(result.Value.Age, poco.Age);
+
+            await Task.Delay(10);
         }
 
         static byte[] GetBytes(Poco poco)

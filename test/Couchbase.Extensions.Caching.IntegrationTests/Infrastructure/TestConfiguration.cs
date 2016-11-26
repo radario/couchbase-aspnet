@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Couchbase.Configuration.Client;
 using Microsoft.Extensions.Configuration;
 
