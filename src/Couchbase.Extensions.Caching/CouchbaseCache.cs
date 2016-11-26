@@ -46,7 +46,12 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            _bucket.Insert(key, value);
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            _bucket.Insert(key, value, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
         public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options)
@@ -55,7 +60,12 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            return _bucket.InsertAsync(key, value);
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            return _bucket.InsertAsync(key, value, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
         public void Refresh(string key)
@@ -64,6 +74,7 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
+
             _bucket.Touch(key, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
@@ -73,6 +84,7 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
+
             await _bucket.TouchAsync(key, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
@@ -82,6 +94,7 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
+
             _bucket.Remove(key);
         }
 
@@ -91,6 +104,7 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
+
             await _bucket.RemoveAsync(key);
         }
 
@@ -100,6 +114,7 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
+
             return (await _bucket.GetAsync<byte[]>(key)).Value;
         }
     }

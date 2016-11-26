@@ -69,5 +69,20 @@ namespace Couchbase.Extensions.Caching.UnitTests
 
             Assert.ThrowsAsync< ArgumentNullException>(async () => await cache.RemoveAsync(null));
         }
+
+        [Test] public void Set_WhenValueIsNull_ThrowArgumentNullException()
+        {
+            var cache = new CouchbaseCache(null, null);
+
+            Assert.Throws<ArgumentNullException>(() => cache.Set(null, new byte[0], null));
+        }
+
+        [Test]
+        public void SetAsync_WhenValueIsNull_ThrowArgumentNullException()
+        {
+            var cache = new CouchbaseCache(null, null);
+
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.SetAsync(null, new byte[0], null));
+        }
     }
 }
