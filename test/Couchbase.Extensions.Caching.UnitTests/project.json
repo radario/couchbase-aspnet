@@ -16,6 +16,7 @@
       "type": "platform",
       "version": "1.0.1"
     },
+    "Moq": "4.6.38-alpha",
     "NUnit": "3.5.0"
   },
 
