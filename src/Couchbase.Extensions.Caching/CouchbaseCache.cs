@@ -11,12 +11,11 @@ namespace Couchbase.Extensions.Caching
         private readonly IBucket _bucket;
         private readonly IOptions<CouchbaseCacheOptions> _options;
 
-        public CouchbaseCache(IOptions<CouchbaseCacheOptions> options) :
-            this(ClusterHelper.GetBucket(options.Value.BucketName), options)
+        public CouchbaseCache(IOptions<CouchbaseCacheOptions> options) : this(ClusterHelper.GetBucket(options.Value.BucketName), options)
         {
         }
 
-        internal CouchbaseCache(IBucket bucket, IOptions<CouchbaseCacheOptions> options)
+        public CouchbaseCache(IBucket bucket, IOptions<CouchbaseCacheOptions> options)
         {
             _bucket = bucket;
             _options = options;
@@ -27,9 +26,9 @@ namespace Couchbase.Extensions.Caching
             return _bucket.Get<byte[]>(key).Value;
         }
 
-        public async Task<byte[]> GetAsync(string key)
+        public Task GetAsync(string key)
         {
-            return (await _bucket.GetAsync<byte[]>(key)).Value;
+            return _bucket.GetAsync<byte[]>(key);
         }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
@@ -44,22 +43,22 @@ namespace Couchbase.Extensions.Caching
 
         public void Refresh(string key)
         {
-            _bucket.Touch(key, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
+            _bucket.Touch(key, new TimeSpan(0, 0, 10));
         }
 
-        public async Task RefreshAsync(string key)
+        public Task RefreshAsync(string key)
         {
-            await _bucket.TouchAsync(key, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
+            return _bucket.TouchAsync(key, new TimeSpan(0, 0, 10));
         }
 
         public void Remove(string key)
         {
-            _bucket.Remove(key);
+            _bucket.RemoveAsync(key);
         }
 
-        public async Task RemoveAsync(string key)
+        public Task RemoveAsync(string key)
         {
-            await _bucket.RemoveAsync(key);
+            return _bucket.RemoveAsync(key);
         }
 
         async Task<byte[]> IDistributedCache.GetAsync(string key)
