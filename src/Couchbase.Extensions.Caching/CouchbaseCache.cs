@@ -8,8 +8,9 @@ namespace Couchbase.Extensions.Caching
 {
     public class CouchbaseCache : IDistributedCache
     {
-        private readonly IBucket _bucket;
-        private readonly IOptions<CouchbaseCacheOptions> _options;
+        internal IBucket Bucket { get; }
+
+        internal IOptions<CouchbaseCacheOptions> Options { get; }
 
         public CouchbaseCache(IOptions<CouchbaseCacheOptions> options) :
             this(ClusterHelper.GetBucket(options.Value.BucketName), options)
@@ -18,8 +19,8 @@ namespace Couchbase.Extensions.Caching
 
         public CouchbaseCache(IBucket bucket, IOptions<CouchbaseCacheOptions> options)
         {
-            _bucket = bucket;
-            _options = options;
+            Bucket = bucket;
+            Options = options;
         }
 
         public byte[] Get(string key)
@@ -28,7 +29,7 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            return _bucket.Get<byte[]>(key).Value;
+            return Bucket.Get<byte[]>(key).Value;
         }
 
         public async Task<byte[]> GetAsync(string key)
@@ -37,7 +38,7 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            return (await _bucket.GetAsync<byte[]>(key)).Value;
+            return (await Bucket.GetAsync<byte[]>(key)).Value;
         }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
@@ -51,7 +52,7 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(value));
             }
 
-            _bucket.Insert(key, value, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
+            Bucket.Insert(key, value, Options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
         public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options)
@@ -65,7 +66,7 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(value));
             }
 
-            return _bucket.InsertAsync(key, value, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
+            return Bucket.InsertAsync(key, value, Options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
         public void Refresh(string key)
@@ -75,7 +76,7 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            _bucket.Touch(key, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
+            Bucket.Touch(key, Options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
         public async Task RefreshAsync(string key)
@@ -85,7 +86,7 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            await _bucket.TouchAsync(key, _options.Value.LifeSpan ?? TimeSpan.FromDays(180));
+            await Bucket.TouchAsync(key, Options.Value.LifeSpan ?? TimeSpan.FromDays(180));
         }
 
         public void Remove(string key)
@@ -95,7 +96,7 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            _bucket.Remove(key);
+            Bucket.Remove(key);
         }
 
         public async Task RemoveAsync(string key)
@@ -105,7 +106,7 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            await _bucket.RemoveAsync(key);
+            await Bucket.RemoveAsync(key);
         }
 
         async Task<byte[]> IDistributedCache.GetAsync(string key)
@@ -115,7 +116,7 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return (await _bucket.GetAsync<byte[]>(key)).Value;
+            return (await Bucket.GetAsync<byte[]>(key)).Value;
         }
     }
 }
