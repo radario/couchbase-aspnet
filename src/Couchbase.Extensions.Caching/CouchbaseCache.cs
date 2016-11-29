@@ -17,20 +17,17 @@ namespace Couchbase.Extensions.Caching
 
         private ISystemClock _clock = new SystemClock();
 
-        private class CacheItem
+        private class CacheItem<T>
         {
             public TimeSpan CreationTime { get; set; }
+
+            public T Body;
         }
 
-        public CouchbaseCache(IOptions<CouchbaseCacheOptions> options) :
-            this(ClusterHelper.GetBucket(options.Value.BucketName), options)
+        public CouchbaseCache(IOptions<CouchbaseCacheOptions> options)
         {
-        }
-
-        public CouchbaseCache(IBucket bucket, IOptions<CouchbaseCacheOptions> options)
-        {
-            Bucket = bucket;
             Options = options;
+            Bucket = options.Value.Bucket ?? ClusterHelper.GetBucket(Options.Value.BucketName);
         }
 
         public byte[] Get(string key)

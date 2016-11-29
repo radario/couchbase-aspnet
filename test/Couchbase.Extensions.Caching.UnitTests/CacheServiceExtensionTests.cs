@@ -1,8 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Specialized;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using NUnit.Framework;
+using System.Linq;
+using Couchbase.Configuration.Client;
+using Couchbase.Core;
 
 namespace Couchbase.Extensions.Caching.UnitTests
 {
@@ -10,15 +13,51 @@ namespace Couchbase.Extensions.Caching.UnitTests
     public class CacheServiceExtensionTests
     {
         [Test]
-        public void Test()
+        public void AddDistributedCouchbaseCache_RegistersDistributedCacheAsSingleton()
         {
-            Assert.IsTrue(true);
+            // Arrange
+            var services = new ServiceCollection();
+
+            // Act
+            services.AddDistributedCouchbaseCache(options => { });
+
+            // Assert
+            var distributedCache = services.FirstOrDefault(desc => desc.ServiceType == typeof(IDistributedCache));
+
+            Assert.NotNull(distributedCache);
+            Assert.AreEqual(ServiceLifetime.Singleton, distributedCache.Lifetime);
         }
 
         [Test]
-        public void Test2()
+        public void AddDistributedCouchbaseCache_ReplacesPreviouslyUserRegisteredServices()
         {
-            Assert.IsTrue(false);
+            // Arrange
+            var services = new ServiceCollection();
+            services.AddScoped(typeof(IDistributedCache), sp => new Mock<IDistributedCache>());
+            var bucket = new Mock<IBucket>();
+
+            // Act
+            services.AddDistributedCouchbaseCache(options => {
+                options.BucketName = "default";
+                options.Bucket = bucket.Object;
+            });
+
+            // Assert
+            var serviceProvider = services.BuildServiceProvider();
+
+            var distributedCache = services.FirstOrDefault(desc => desc.ServiceType == typeof(IDistributedCache));
+
+            Assert.NotNull(distributedCache);
+            Assert.AreEqual(ServiceLifetime.Scoped, distributedCache.Lifetime);
+            Assert.IsInstanceOf<CouchbaseCache>(serviceProvider.GetRequiredService<IDistributedCache>());
+        }
+
+        [Test]
+        public void AddDistributedCouchbaseCache_Allows_Chaining()
+        {
+            var services = new ServiceCollection();
+
+            Assert.AreSame(services, services.AddDistributedCouchbaseCache(_ => { }));
         }
     }
 }

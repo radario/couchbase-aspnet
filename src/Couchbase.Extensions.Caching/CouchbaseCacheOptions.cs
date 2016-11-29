@@ -15,6 +15,6 @@ namespace Couchbase.Extensions.Caching
 
         public TimeSpan? LifeSpan { get; set; }
 
-        public static TimeSpan DefaultTimeSpan = new TimeSpan(30,0,0,0);
+        public IBucket Bucket { get; set; }
     }
 }
