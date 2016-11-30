@@ -46,6 +46,7 @@ namespace Couchbase.Extensions.Example
                     }
                 };
                 ClusterHelper.Initialize(opt.Configuration);
+                opt.Bucket = ClusterHelper.GetBucket(opt.BucketName);
             });
         }
 
