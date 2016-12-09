@@ -100,7 +100,7 @@ namespace Couchbase.Extensions.Caching
             }
 
             var lifeTime = GetLifetime(options);
-            Bucket.Insert(key, value, lifeTime);
+            Bucket.Upsert(key, value, lifeTime);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Couchbase.Extensions.Caching
             }
 
             var lifeTime = GetLifetime(options);
-            return Bucket.InsertAsync(key, value, lifeTime);
+            return Bucket.UpsertAsync(key, value, lifeTime);
         }
 
         /// <summary>

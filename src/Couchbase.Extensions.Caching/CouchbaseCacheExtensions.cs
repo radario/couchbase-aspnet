@@ -32,7 +32,7 @@ namespace Couchbase.Extensions.Caching
             IOptions<CouchbaseCacheOptions> cacheOptions;
             var bucket = GetBucket(cache, out cacheOptions);
 
-            bucket.Insert(key, value, GetLifetime(cache, options));
+            bucket.Upsert(key, value, GetLifetime(cache, options));
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Couchbase.Extensions.Caching
             IOptions<CouchbaseCacheOptions> cacheOptions;
             var bucket = GetBucket(cache, out cacheOptions);
 
-            return bucket.InsertAsync(key, value, GetLifetime(cache, options));
+            return bucket.UpsertAsync(key, value, GetLifetime(cache, options));
         }
 
         /// <summary>
