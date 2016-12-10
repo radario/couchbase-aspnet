@@ -19,7 +19,8 @@
     "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0",
     "Couchbase.Extensions.Caching": "1.0.0-*",
     "CouchbaseNetClient": "2.4.0-dp2",
-    "Microsoft.AspNetCore.Session": "1.0.0"
+    "Microsoft.AspNetCore.Session": "1.0.0",
+    "Couchbase.Extensions.Session": "1.0.0-*"
   },
 
   "tools": {

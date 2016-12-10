@@ -24,6 +24,8 @@ namespace Couchbase.Extensions.SessionExample.Controllers
 
         public IActionResult Contact()
         {
+            // Note does not work: DistributedSession never delegates the call to the underlying IDistributedCache implementation
+            // opened issue on github https://github.com/aspnet/Session/issues/139
             HttpContext.Session.Remove("Test");
             ViewData["Message"] = "Your contact page.";
 

@@ -1,10 +1,11 @@
-﻿using System;
+﻿    using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Couchbase.Configuration.Client;
 using Couchbase.Extensions.Caching;
-using Microsoft.AspNetCore.Builder;
+    using Couchbase.Extensions.Session;
+    using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,14 +41,17 @@ namespace Couchbase.Extensions.SessionExample
                 {
                     Servers = new List<Uri>
                     {
-                        new Uri("http://10.142.150.101:8091/")
+                        new Uri("http://10.142.151.101:8091/")
                     }
                 };
                 ClusterHelper.Initialize(opt.Configuration);
                 opt.Bucket = ClusterHelper.GetBucket(opt.BucketName);
             });
 
-            services.AddSession();
+            services.AddCouchbaseSession(opt =>
+            {
+                opt.IdleTimeout = new TimeSpan(0, 0, 0, 30);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
