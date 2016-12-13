@@ -16,6 +16,7 @@ namespace Couchbase.Extensions.Session
 
             services.AddTransient<ISessionStore, CouchbaseDistributedSessionStore>();
             services.AddDataProtection();
+
             return services;
         }
 

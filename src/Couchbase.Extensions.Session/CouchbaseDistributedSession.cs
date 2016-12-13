@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Couchbase.Extensions.Caching;
 using Microsoft.AspNetCore.Http;
@@ -16,18 +17,25 @@ namespace Couchbase.Extensions.Session
     {
         private static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
         private const int IdByteCount = 16;
-        private CouchbaseCache _cache;
-        private string _sessionKey;
-        private TimeSpan _idleTimeout;
-        private Func<bool> _tryEstablishSession;
-        private ILogger<CouchbaseDistributedSession> _logger;
-        private bool _isNewSessionKey;
+        private readonly CouchbaseCache _cache;
+        private readonly string _sessionKey;
+        private readonly TimeSpan _idleTimeout;
+        private readonly Func<bool> _tryEstablishSession;
+        private readonly ILogger<CouchbaseDistributedSession> _logger;
+        private readonly bool _isNewSessionKey;
         private bool _isModified;
         private bool _loaded;
         private bool _isAvailable;
         private string _sessionId;
         private byte[] _sessionIdBytes;
-        private Dictionary<string, byte[]> _store;
+        private Dictionary<string, object> _store;
+
+        private class SessionItem
+        {
+            public string SessionId { get; set; }
+
+            public dynamic Body { get; set; }
+        }
 
         public CouchbaseDistributedSession(
             IDistributedCache cache,
@@ -63,7 +71,7 @@ namespace Couchbase.Extensions.Session
             _tryEstablishSession = tryEstablishSession;
             _logger = loggerFactory.CreateLogger<CouchbaseDistributedSession>();
             _isNewSessionKey = isNewSessionKey;
-            _store = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+            _store = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
 
         private void Load()
@@ -72,7 +80,7 @@ namespace Couchbase.Extensions.Session
             {
                 try
                 {
-                    var data = _cache.Get<Dictionary<string, byte[]>>(_sessionKey);
+                    var data = _cache.Get<Dictionary<string, object>>(_sessionKey);
                     if (!_isNewSessionKey && _store == null)
                     {
                         _logger.LogWarning(2, "Accessing expired session, Key:{0}", _sessionKey);
@@ -80,7 +88,7 @@ namespace Couchbase.Extensions.Session
 
                     if(data != null)
                     {
-                        _store = new Dictionary<string, byte[]>(data, StringComparer.OrdinalIgnoreCase);
+                        _store = new Dictionary<string, object>(data, StringComparer.OrdinalIgnoreCase);
                     }
                     _isAvailable = true;
                 }
@@ -104,14 +112,14 @@ namespace Couchbase.Extensions.Session
             {
                 try
                 {
-                    var data = await _cache.GetAsync<Dictionary<string, byte[]>>(_sessionKey);
+                    var data = await _cache.GetAsync<Dictionary<string, object>>(_sessionKey);
                     if (!_isNewSessionKey && _store == null)
                     {
                         _logger.LogWarning(2, "Accessing expired session, Key:{0}", _sessionKey);
                     }
                     if(data != null)
                     {
-                        _store = new Dictionary<string, byte[]>(data, StringComparer.OrdinalIgnoreCase);
+                        _store = new Dictionary<string, object>(data, StringComparer.OrdinalIgnoreCase);
                     }
                     _isAvailable = true;
                 }
@@ -137,7 +145,7 @@ namespace Couchbase.Extensions.Session
                 {
                     try
                     {
-                        var data = await _cache.GetAsync<Dictionary<string, byte[]>>(_sessionKey);
+                        var data = await _cache.GetAsync<Dictionary<string, object>>(_sessionKey);
                         if (data == null)
                         {
                             _logger.LogInformation(3, "Session started; Key:{sessionKey}, Id:{sessionId}", _sessionKey, Id);
@@ -166,7 +174,37 @@ namespace Couchbase.Extensions.Session
         public bool TryGetValue(string key, out byte[] value)
         {
             Load();
-            return _store.TryGetValue(key, out value);
+            object item;
+            var success = _store.TryGetValue(key, out item);
+
+            value = (byte[])item;
+            return success;
+        }
+
+        public bool TryGetValue<T>(string key, out T value)
+        {
+            Load();
+            object item;
+            var success = _store.TryGetValue(key, out item);
+            value = (T) item;
+            return success;
+        }
+
+        public void Set<T>(string key, T value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+            if (IsAvailable)
+            {
+                if (!_tryEstablishSession())
+                {
+                    throw new InvalidOperationException("The session cannot be established after the response has started.");
+                }
+            }
+            _isModified = true;
+            _store[key] = value;
         }
 
         public void Set(string key, byte[] value)
@@ -230,7 +268,7 @@ namespace Couchbase.Extensions.Session
             }
         }
 
-        public IEnumerable Keys { get; }
+        public IEnumerable Keys => ((ISession)this).Keys;
 
         IEnumerable<string> ISession.Keys
         {

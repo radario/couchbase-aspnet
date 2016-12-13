@@ -42,7 +42,7 @@ namespace Couchbase.Extensions.Caching
         /// <param name="key">The key for the cache item.</param>
         /// <param name="value">An array of bytes representing the item.</param>
         /// <param name="options">The <see cref="DistributedCacheEntryOptions"/> for the item; note that only sliding expiration is currently supported.</param>
-        public static Task SetAsync<T>(this IDistributedCache cache, string key, T value, DistributedCacheEntryOptions options)
+        public static async Task SetAsync<T>(this IDistributedCache cache, string key, T value, DistributedCacheEntryOptions options)
         {
             if (key == null)
             {
@@ -56,7 +56,7 @@ namespace Couchbase.Extensions.Caching
             IOptions<CouchbaseCacheOptions> cacheOptions;
             var bucket = GetBucket(cache, out cacheOptions);
 
-            return bucket.UpsertAsync(key, value, GetLifetime(cache, options));
+            var result = await bucket.UpsertAsync(key, value, GetLifetime(cache, options));
         }
 
         /// <summary>
@@ -70,7 +70,8 @@ namespace Couchbase.Extensions.Caching
             IOptions<CouchbaseCacheOptions> options;
             var bucket = GetBucket(cache, out options);
 
-            return bucket.Get<T>(key).Value;
+            var result = bucket.Get<T>(key);
+            return result.Value;
         }
 
         /// <summary>

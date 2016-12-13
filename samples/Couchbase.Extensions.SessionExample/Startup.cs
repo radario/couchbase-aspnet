@@ -50,7 +50,7 @@ namespace Couchbase.Extensions.SessionExample
 
             services.AddCouchbaseSession(opt =>
             {
-                opt.IdleTimeout = new TimeSpan(0, 0, 0, 30);
+                opt.IdleTimeout = new TimeSpan(0, 0, 10, 0);
             });
         }
 

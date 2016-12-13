@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Couchbase.Extensions.Session;
+using Couchbase.Extensions.SessionExample.Models;
 
 namespace Couchbase.Extensions.SessionExample.Controllers
 {
@@ -11,21 +13,20 @@ namespace Couchbase.Extensions.SessionExample.Controllers
     {
         public IActionResult Index()
         {
-            HttpContext.Session.SetString("Test", "Session stored in couchbase!");
+            HttpContext.Session.SetObject("Test", "{ \"name\" : \"Session stored in couchbase!\"}");
+            HttpContext.Session.SetObject("PocoTest", new Poco {Age = 19, Name = "PocoLoco"});
             return View();
         }
 
         public IActionResult About()
         {
-            ViewData["Message"] = HttpContext.Session.GetString("Test");
+            ViewData["Message"] = HttpContext.Session.GetObject<string>("Test");
 
             return View();
         }
 
         public IActionResult Contact()
         {
-            // Note does not work: DistributedSession never delegates the call to the underlying IDistributedCache implementation
-            // opened issue on github https://github.com/aspnet/Session/issues/139
             HttpContext.Session.Remove("Test");
             ViewData["Message"] = "Your contact page.";
 
