@@ -2,7 +2,7 @@
   "version": "1.0.0-*",
 
   "dependencies": {
-    "CouchbaseNetClient": "2.4.0-dp2",
+    "CouchbaseNetClient": "2.4.0-dp3",
     "Microsoft.Extensions.Caching.Abstractions": "1.1.0",
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.1.0",
     "Microsoft.Extensions.Options": "1.1.0",
