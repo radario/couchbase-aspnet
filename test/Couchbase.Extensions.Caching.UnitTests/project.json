@@ -18,7 +18,6 @@
     "Microsoft.Extensions.Caching.Memory": "1.1.0",
     "Microsoft.Extensions.DependencyInjection": "1.1.0",
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.1.0",
-    "Microsoft.Extensions.Logging.Testing": "1.2.0-preview1-22849",
     "Microsoft.NETCore.App": "1.1.0",
     "Moq": "4.6.38-alpha",
     "NUnit": "3.5.0"
