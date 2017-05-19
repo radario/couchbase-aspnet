@@ -41,7 +41,7 @@ namespace Couchbase.Extensions.SessionExample
                 {
                     Servers = new List<Uri>
                     {
-                        new Uri("http://10.142.151.101:8091/")
+                        new Uri("http://localhost:8091/")
                     }
                 };
                 ClusterHelper.Initialize(opt.Configuration);
