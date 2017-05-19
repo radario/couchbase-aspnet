@@ -3,7 +3,7 @@
     "BundlerMinifier.Core": "2.2.306",
     "Couchbase.Extensions.Caching": "1.0.0-*",
     "Couchbase.Extensions.Session": "1.0.0-*",
-    "CouchbaseNetClient": "2.4.0-dp3",
+    "CouchbaseNetClient": "2.4.5",
     "Microsoft.AspNetCore.Diagnostics": "1.1.0",
     "Microsoft.AspNetCore.Mvc": "1.1.0",
     "Microsoft.AspNetCore.Routing": "1.1.0",
