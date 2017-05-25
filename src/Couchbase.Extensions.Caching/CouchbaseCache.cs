@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Couchbase.Core;
+using Couchbase.Logging;
+using Couchbase.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Options;
@@ -12,6 +14,8 @@ namespace Couchbase.Extensions.Caching
     /// </summary>
     public class CouchbaseCache : IDistributedCache
     {
+        internal readonly ILog Log = LogManager.GetLogger<CouchbaseCache>();
+
         internal static readonly TimeSpan InfiniteLifetime = TimeSpan.Zero;
 
         internal IBucket Bucket { get; }
@@ -50,7 +54,9 @@ namespace Couchbase.Extensions.Caching
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            return Bucket.Get<byte[]>(key).Value;
+            var result = Bucket.Get<byte[]>(key);
+            HandleIfError(result);
+            return result.Value;
         }
 
         /// <summary>
@@ -65,7 +71,9 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return (await Bucket.GetAsync<byte[]>(key)).Value;
+            var result = await Bucket.GetAsync<byte[]>(key).ContinueOnAnyContext();
+            HandleIfError(result);
+            return result.Value;
         }
 
         /// <summary>
@@ -73,13 +81,9 @@ namespace Couchbase.Extensions.Caching
         /// </summary>
         /// <param name="key">The key to lookup the item.</param>
         /// <returns>The cache item if found, otherwise null.</returns>
-        public async Task<byte[]> GetAsync(string key)
+        public Task<byte[]> GetAsync(string key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-            return (await Bucket.GetAsync<byte[]>(key)).Value;
+            return ((IDistributedCache)this).GetAsync(key);
         }
 
         /// <summary>
@@ -100,7 +104,8 @@ namespace Couchbase.Extensions.Caching
             }
 
             var lifeTime = GetLifetime(options);
-            Bucket.Upsert(key, value, lifeTime);
+            var result = Bucket.Upsert(key, value, lifeTime);
+            HandleIfError(result);
         }
 
         /// <summary>
@@ -109,7 +114,7 @@ namespace Couchbase.Extensions.Caching
         /// <param name="key">The key for the cache item.</param>
         /// <param name="value">An array of bytes representing the item.</param>
         /// <param name="options">The <see cref="DistributedCacheEntryOptions"/> for the item; note that only sliding expiration is currently supported.</param>
-        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options = null)
+        public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options = null)
         {
             if (key == null)
             {
@@ -121,7 +126,8 @@ namespace Couchbase.Extensions.Caching
             }
 
             var lifeTime = GetLifetime(options);
-            return Bucket.UpsertAsync(key, value, lifeTime);
+            var result = await Bucket.UpsertAsync(key, value, lifeTime);
+            HandleIfError(result);
         }
 
         /// <summary>
@@ -136,7 +142,8 @@ namespace Couchbase.Extensions.Caching
             }
 
             var lifeTime = GetLifetime();
-            Bucket.Touch(key, lifeTime);
+            var result = Bucket.Touch(key, lifeTime);
+            HandleIfError(result);
         }
 
         /// <summary>
@@ -151,7 +158,8 @@ namespace Couchbase.Extensions.Caching
             }
 
             var lifeTime = GetLifetime();
-            await Bucket.TouchAsync(key, lifeTime);
+            var result = await Bucket.TouchAsync(key, lifeTime);
+            HandleIfError(result);
         }
 
         /// <summary>
@@ -165,7 +173,8 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            Bucket.Remove(key);
+            var result = Bucket.Remove(key);
+            HandleIfError(result);
         }
 
         /// <summary>
@@ -179,7 +188,8 @@ namespace Couchbase.Extensions.Caching
                 throw new ArgumentNullException(nameof(key));
             }
 
-            await Bucket.RemoveAsync(key);
+            var result = await Bucket.RemoveAsync(key);
+            HandleIfError(result);
         }
 
         /// <summary>
@@ -198,6 +208,26 @@ namespace Couchbase.Extensions.Caching
             }
 
             return Options.Value.LifeSpan ?? InfiniteLifetime;
+        }
+
+        /// <summary>
+        /// Handles an error if the operation has failed.
+        /// </summary>
+        /// <param name="result">The result.</param>
+        internal void HandleIfError(IOperationResult result)
+        {
+            if (!result.Success)
+            {
+                Log.Debug("Operation {0} failed: {1}", result.OpCode, result.Status);
+                if (result.Exception != null)
+                {
+                    Log.Warn(result.Exception);
+                    if (Options.Value.ThrowExceptions)
+                    {
+                        throw result.Exception;
+                    }
+                }
+            }
         }
     }
 }
