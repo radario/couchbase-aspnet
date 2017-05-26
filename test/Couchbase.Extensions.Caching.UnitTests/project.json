@@ -20,7 +20,7 @@
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.1.1",
     "Microsoft.NETCore.App": "1.1.2",
     "Moq": "4.6.38-alpha",
-    "NUnit": "3.5.0"
+    "NUnit": "3.6.1"
   },
 
   "frameworks": {
@@ -29,6 +29,7 @@
     }
   },
   "runtimes": {
-    "win10-x64": {}
+    "win10-x64": {},
+    "win8-x64": {}
   }
 }
