@@ -1,0 +1,30 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Couchbase.Extensions.Caching</id>
+    <version>1.0.0-dp</version>
+    <title>Couchbase .NET Core Distributed Cache</title>
+    <authors>Couchbase, Inc.</authors>
+    <owners>Couchbase, Inc.</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+    <projectUrl>https://github.com/couchbaselabs/couchbase-aspnet/tree/3.0-core</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/couchbaselabs/Linq2Couchbase/master/Packaging/couchbase-logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A Distributed Cache for Couchbase Server and .NET Core.</description>
+    <copyright>Copyright 2017</copyright>
+    <tags>couchbase cache distributed nosql database</tags>
+    <dependencies>
+      <group targetFramework="netstandard1.6">
+        <dependency id="CouchbaseNetClient" version="2.4.5" />
+        <dependency id="Microsoft.Extensions.Caching.Abstractions" version="1.1.2" />
+        <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="1.1.1" />
+        <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="Microsoft.Extensions.Logging" version="1.1.0" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\netstandard1.6\Couchbase.Extensions.Caching.dll" target="lib\netstandard1.6\Couchbase.Extensions.Caching.dll" />
+  </files>
+</package>
