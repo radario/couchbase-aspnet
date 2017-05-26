@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Couchbase.Extensions.Caching;
+using Couchbase.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -15,13 +13,13 @@ namespace Couchbase.Extensions.Session
 {
     public class CouchbaseDistributedSession : ISession
     {
+        internal readonly ILog Log = LogManager.GetLogger<CouchbaseCache>();
         private static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
         private const int IdByteCount = 16;
         private readonly CouchbaseCache _cache;
         private readonly string _sessionKey;
         private readonly TimeSpan _idleTimeout;
         private readonly Func<bool> _tryEstablishSession;
-        private readonly ILogger<CouchbaseDistributedSession> _logger;
         private readonly bool _isNewSessionKey;
         private bool _isModified;
         private bool _loaded;
@@ -29,13 +27,6 @@ namespace Couchbase.Extensions.Session
         private string _sessionId;
         private byte[] _sessionIdBytes;
         private Dictionary<string, object> _store;
-
-        private class SessionItem
-        {
-            public string SessionId { get; set; }
-
-            public dynamic Body { get; set; }
-        }
 
         public CouchbaseDistributedSession(
             IDistributedCache cache,
@@ -69,7 +60,6 @@ namespace Couchbase.Extensions.Session
             _sessionKey = sessionKey;
             _idleTimeout = idleTimeout;
             _tryEstablishSession = tryEstablishSession;
-            _logger = loggerFactory.CreateLogger<CouchbaseDistributedSession>();
             _isNewSessionKey = isNewSessionKey;
             _store = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
@@ -83,7 +73,7 @@ namespace Couchbase.Extensions.Session
                     var data = _cache.Get<Dictionary<string, object>>(_sessionKey);
                     if (!_isNewSessionKey && _store == null)
                     {
-                        _logger.LogWarning(2, "Accessing expired session, Key:{0}", _sessionKey);
+                        Log.Warn("Accessing expired session, Key:{0}", _sessionKey);
                     }
 
                     if(data != null)
@@ -94,7 +84,7 @@ namespace Couchbase.Extensions.Session
                 }
                 catch (Exception exception)
                 {
-                    _logger.LogError(6, exception, "Session cache read exception, Key:{0}", _sessionKey);
+                    Log.Error("Session cache read exception, Key:{0} {1}", _sessionKey, exception);
                     _isAvailable = false;
                     _sessionId = string.Empty;
                     _sessionIdBytes = null;
@@ -115,7 +105,7 @@ namespace Couchbase.Extensions.Session
                     var data = await _cache.GetAsync<Dictionary<string, object>>(_sessionKey);
                     if (!_isNewSessionKey && _store == null)
                     {
-                        _logger.LogWarning(2, "Accessing expired session, Key:{0}", _sessionKey);
+                        Log.Warn("Accessing expired session, Key:{0}", _sessionKey);
                     }
                     if(data != null)
                     {
@@ -125,7 +115,7 @@ namespace Couchbase.Extensions.Session
                 }
                 catch (Exception exception)
                 {
-                    _logger.LogError(6, exception, "Session cache read exception, Key:{0}", _sessionKey);
+                    Log.Error("Session cache read exception, Key:{0} {1}", _sessionKey, exception);
                     _isAvailable = false;
                     _sessionId = string.Empty;
                     _sessionIdBytes = null;
@@ -141,19 +131,19 @@ namespace Couchbase.Extensions.Session
         {
             if (_isModified)
             {
-                if (_logger.IsEnabled(LogLevel.Information))
+                if (Log.IsDebugEnabled)
                 {
                     try
                     {
                         var data = await _cache.GetAsync<Dictionary<string, object>>(_sessionKey);
                         if (data == null)
                         {
-                            _logger.LogInformation(3, "Session started; Key:{sessionKey}, Id:{sessionId}", _sessionKey, Id);
+                            Log.Debug("Session started; Key:{sessionKey}, Id:{sessionId}", _sessionKey, Id);
                         }
                     }
                     catch (Exception exception)
                     {
-                        _logger.LogError(6, "Session cache read exception, Key:{sessionKey}", _sessionKey, exception);
+                        Log.Error("Session cache read exception, Key:{sessionKey}", _sessionKey, exception);
                     }
                 }
 
@@ -163,7 +153,7 @@ namespace Couchbase.Extensions.Session
                     new DistributedCacheEntryOptions().SetSlidingExpiration(_idleTimeout));
 
                 _isModified = false;
-                _logger.LogDebug(5, "Session stored; Key:{sessionKey}, Id:{sessionId}, Count:{count}",_sessionKey, Id, _store.Count);
+                Log.Debug("Session stored; Key:{sessionKey}, Id:{sessionId}, Count:{count}",_sessionKey, Id, _store.Count);
             }
             else
             {

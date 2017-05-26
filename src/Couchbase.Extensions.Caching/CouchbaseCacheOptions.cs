@@ -35,5 +35,16 @@ namespace Couchbase.Extensions.Caching
         /// A bucket reference.
         /// </summary>
         public IBucket Bucket { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to throw an exception if the operation has failed and the result
+        /// contains an exception. The using application will then have to handle the exception individually. If the
+        /// operation fails and ThrowExceptions is <c>false</c>, then the reason for the exception will not be thrown
+        /// and null will be returned. In either case the exception will be logged.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if you want to throw exceptions; otherwise, <c>false</c>.
+        /// </value>
+        public bool ThrowExceptions { get; set; }
     }
 }
