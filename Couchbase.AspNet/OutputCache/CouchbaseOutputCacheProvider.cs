@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Web.Caching;
 using Couchbase.Core;
 using Couchbase.IO;
+using System.Security.Cryptography;
 
 namespace Couchbase.AspNet.OutputCache
 {
@@ -39,7 +40,19 @@ namespace Couchbase.AspNet.OutputCache
         private string SanitizeKey(
             string key)
         {
-            return Prefix + Convert.ToBase64String(Encoding.UTF8.GetBytes(key), Base64FormattingOptions.None);
+            return Prefix + GetMD5Hash(key);
+        }
+
+        private string GetMD5Hash(string input) {
+            var md5 = MD5.Create();
+            byte[] computedHash = md5.ComputeHash(Encoding.UTF8.GetBytes(input));
+            
+            StringBuilder sb = new StringBuilder();
+            for(int i = 0; i < computedHash.Length; i++) {
+                sb.Append(computedHash[i].ToString("x2"));
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>
@@ -120,7 +133,7 @@ namespace Couchbase.AspNet.OutputCache
             object entry,
             DateTime utcExpiry)
         {
-            client.Insert(SanitizeKey(key), Serialize(entry), DateTime.SpecifyKind(utcExpiry, DateTimeKind.Utc).TimeOfDay);
+            client.Upsert(SanitizeKey(key), Serialize(entry), DateTime.SpecifyKind(utcExpiry, DateTimeKind.Utc).TimeOfDay);
         }
 
         byte[] Serialize(object value)
