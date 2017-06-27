@@ -12,9 +12,15 @@ namespace Couchbase.AspNet.OutputCache
 {
     public class CouchbaseOutputCacheProvider : OutputCacheProvider
     {
+        private static readonly TimeSpan MaxExpiration;
+
         private IBucket client;
         private bool disposeClient;
         private static readonly string Prefix = (System.Web.Hosting.HostingEnvironment.SiteName ?? String.Empty).Replace(" ", "-") + "+" + System.Web.Hosting.HostingEnvironment.ApplicationVirtualPath + "cache-";
+
+        static CouchbaseOutputCacheProvider() {
+            MaxExpiration = TimeSpan.FromDays(3650);
+        }
 
         /// <summary>
         /// Function to initialize the provider
@@ -77,8 +83,7 @@ namespace Couchbase.AspNet.OutputCache
 
             // Make sure that the expiration date is flagged as UTC. The client converts the expiration to 
             // UTC to calculate the UNIX time and this way we can skip the UTC -> ToLocal -> ToUTC chain
-            utcExpiry = DateTime.SpecifyKind(utcExpiry, DateTimeKind.Utc);
-            TimeSpan cacheDuration = utcExpiry.Subtract(DateTime.UtcNow);
+            TimeSpan cacheDuration = GetCacheDuration(utcExpiry);
 
             // We should only store the item if it's not in the cache. So try to add it and if it 
             // succeeds, return the value we just stored
@@ -134,9 +139,7 @@ namespace Couchbase.AspNet.OutputCache
             object entry,
             DateTime utcExpiry)
         {
-            utcExpiry = DateTime.SpecifyKind(utcExpiry, DateTimeKind.Utc);
-            TimeSpan cacheDuration = utcExpiry.Subtract(DateTime.UtcNow);
-
+            TimeSpan cacheDuration = GetCacheDuration(utcExpiry);
             client.Upsert(SanitizeKey(key), Serialize(entry), cacheDuration);
         }
 
@@ -159,6 +162,16 @@ namespace Couchbase.AspNet.OutputCache
             {
                 return new BinaryFormatter().Deserialize(ms);
             }
+        }
+
+        TimeSpan GetCacheDuration(DateTime utcExpiry) {
+            TimeSpan result = utcExpiry.Subtract(DateTime.UtcNow);
+
+            if (result > MaxExpiration) {
+                result = MaxExpiration;
+            }
+
+            return MaxExpiration;
         }
     }
 
