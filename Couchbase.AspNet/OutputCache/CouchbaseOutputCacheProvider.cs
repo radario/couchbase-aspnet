@@ -78,10 +78,11 @@ namespace Couchbase.AspNet.OutputCache
             // Make sure that the expiration date is flagged as UTC. The client converts the expiration to 
             // UTC to calculate the UNIX time and this way we can skip the UTC -> ToLocal -> ToUTC chain
             utcExpiry = DateTime.SpecifyKind(utcExpiry, DateTimeKind.Utc);
+            TimeSpan cacheDuration = utcExpiry.Subtract(DateTime.UtcNow);
 
             // We should only store the item if it's not in the cache. So try to add it and if it 
             // succeeds, return the value we just stored
-            if (client.Insert(key, Serialize(entry), utcExpiry.TimeOfDay).Success)
+            if (client.Insert(key, Serialize(entry), cacheDuration).Success)
                 return entry;
 
             // If it's in the cache we should return it
@@ -90,7 +91,7 @@ namespace Couchbase.AspNet.OutputCache
             // If the item got evicted between the Add and the Get (very rare) we store it anyway, 
             // but this time with Set to make sure it always gets into the cache
             if (retval == null) {
-                client.Insert(key, entry, utcExpiry.TimeOfDay);
+                client.Insert(key, entry, cacheDuration);
                 retval = entry;
             }
 
@@ -133,7 +134,10 @@ namespace Couchbase.AspNet.OutputCache
             object entry,
             DateTime utcExpiry)
         {
-            client.Upsert(SanitizeKey(key), Serialize(entry), DateTime.SpecifyKind(utcExpiry, DateTimeKind.Utc).TimeOfDay);
+            utcExpiry = DateTime.SpecifyKind(utcExpiry, DateTimeKind.Utc);
+            TimeSpan cacheDuration = utcExpiry.Subtract(DateTime.UtcNow);
+
+            client.Upsert(SanitizeKey(key), Serialize(entry), cacheDuration);
         }
 
         byte[] Serialize(object value)
