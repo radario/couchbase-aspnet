@@ -16,7 +16,7 @@ namespace Couchbase.AspNet.OutputCache
 
         private IBucket client;
         private bool disposeClient;
-        private static readonly string Prefix = (System.Web.Hosting.HostingEnvironment.SiteName ?? String.Empty).Replace(" ", "-") + "+" + System.Web.Hosting.HostingEnvironment.ApplicationVirtualPath + "cache-";
+        private static readonly string Prefix = (System.Web.Hosting.HostingEnvironment.SiteName ?? String.Empty).Replace(" ", "-") + "=" + System.Web.Hosting.HostingEnvironment.ApplicationVirtualPath + "cache-";
 
         static CouchbaseOutputCacheProvider() {
             MaxExpiration = TimeSpan.FromDays(3650);
@@ -171,7 +171,7 @@ namespace Couchbase.AspNet.OutputCache
                 result = MaxExpiration;
             }
 
-            return MaxExpiration;
+            return result;
         }
     }
 
